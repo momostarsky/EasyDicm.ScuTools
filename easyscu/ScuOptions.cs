@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using CommandLine;
 
@@ -63,6 +64,14 @@ namespace easyscu
             set;
         }
 
+        [Option("batch", Required = true,  Default = 100  ,HelpText = "How much  DicomFiles Send in one Request !")]
+         
+        public int  BatchSize
+        {
+            get;
+            set;
+        }
+        
         public override string OptionText()
         {
 

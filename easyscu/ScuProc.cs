@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using log4net;
 
 namespace easyscu
@@ -11,13 +12,11 @@ namespace easyscu
             Opt = option;
         }
 
-        public virtual void Start()
-        {
-            Log.Info($"Started With Options :{Opt.OptionText()}");
-        }
+        public abstract void Start();
+        
 
-        public T Opt { get; }
+        protected T Opt { get; }
 
-        public ILog Log { get; }
+        protected ILog Log { get; }
     }
 }
