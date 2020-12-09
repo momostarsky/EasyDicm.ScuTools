@@ -8,7 +8,7 @@ namespace easyscu
     {
         protected ScuProc(T option)
         {
-            Log = LogManager.GetLogger(Startup.Intance.LogName, this.GetType());
+            Log = LogManager.GetLogger(Startup.Intance.DicomNetworkName, this.GetType());
             Opt = option;
         }
 

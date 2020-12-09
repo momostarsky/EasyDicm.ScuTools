@@ -42,13 +42,13 @@ namespace easyscu
         }
     }
 
-    public class LogMgr : LogManager
+    public class ScuLogManager : LogManager
     {
         protected override Logger GetLoggerImpl(string name)
         {
             return new ScuLog(name);
         }
         
-        public static readonly   LogMgr  Instance =new LogMgr();
+        public static readonly   ScuLogManager  Instance =new ScuLogManager();
     }
 }

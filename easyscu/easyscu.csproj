@@ -7,10 +7,21 @@
         <RootNamespace>easyscu</RootNamespace>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>x64</PlatformTarget>
+      <DebugType>full</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>x64</PlatformTarget>
+      <DebugType>full</DebugType>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
       <PackageReference Include="fo-dicom.log4net" Version="4.0.7" />
       <PackageReference Include="fo-dicom.NetCore" Version="4.0.7" />
+      <PackageReference Include="log4net" Version="2.0.12" />
     </ItemGroup>
 
     <ItemGroup>

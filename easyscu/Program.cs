@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using CommandLine;
+using Dicom;
 using Dicom.Imaging;
 using Dicom.Imaging.Codec;
 using Dicom.IO;
@@ -8,6 +10,7 @@ using Dicom.Log;
 using Dicom.Network;
 using log4net;
 using log4net.Config;
+using LogManager = log4net.LogManager;
 
 namespace easyscu
 {
@@ -44,21 +47,31 @@ namespace easyscu
 
             return extCode;
         }
+     
 
         static void Main(string[] args)
         {
-            // 设置日志连接
-            Dicom.Log.Log4NetManager.SetImplementation(LogMgr.Instance); 
-            Dicom.IO.IOManager.SetImplementation(DesktopIOManager.Instance);
-            Dicom.Network.NetworkManager.SetImplementation(DesktopNetworkManager .Instance); // if you want to run dicom services
+            Startup.Intance.Start();
+            // var client = new DicomClient("127.0.0.1", 12345, false, "SCU", "ANY-SCP");
+            // await client.AddRequestAsync(new DicomCStoreRequest(@"test.dcm"));
+            // await client.SendAsync();
+         
+           
+          
 
+         
 
+ 
             Parser.Default.ParseArguments<EchoOptons, StoreOptions>(args)
                 .MapResult(
                     (EchoOptons opt) => CEchoScu(opt),
                     (StoreOptions opt) => CStoreScu(opt),
                     _ => 1
                 );
+            //   
+            // // This will shutdown the log4net system
+            // 
+            Startup.Intance.Stop();
         }
     }
 }
