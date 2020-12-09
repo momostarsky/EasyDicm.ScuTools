@@ -11,7 +11,8 @@ using DicomClient = Dicom.Network.Client.DicomClient;
 namespace easyscu
 {
     /// <summary>
-    /// Command :   cstore --ae CONQUESTSRV1 --port 56781 --host 192.168.1.155 --myae JPAIBox  --src /home/dhz/dcmdata
+    /// Usage
+    /// cstore --ae  DicmQRSCP   --port 11112   --host 192.168.1.92   --myae  EasySCU   --batch 3  --src ./dcmdata
     /// </summary>
     public class CStoreProc : ScuProc<StoreOptions>
     {

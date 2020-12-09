@@ -6,7 +6,8 @@ using DicomClient = Dicom.Network.Client.DicomClient;
 namespace easyscu
 {
     /// <summary>
-    /// Command :   cecho --ae CONQUESTSRV1 --port 56781 --host 192.168.1.155 --myae JPAIBox
+    /// Usage :
+    /// cecho --ae CONQUESTSRV1 --port 5678 --host 192.168.1.155 --myae EasySCU
     /// </summary>
     public class CEchoProc : ScuProc<EchoOptons>
     {
@@ -25,8 +26,7 @@ namespace easyscu
             var client = new DicomClient(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
             client.NegotiateAsyncOps(); 
             await client.AddRequestAsync(dicomReq); 
-            await client.SendAsync(); 
-
+            await client.SendAsync();
         }
   
     }
