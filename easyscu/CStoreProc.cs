@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using Dicom.Network;
+using DicomClient = Dicom.Network.Client.DicomClient;
 
 
 namespace easyscu
@@ -17,55 +19,60 @@ namespace easyscu
         {
         }
 
-        public override void Start()
+        private async Task SendSubSize(string[] dicomFiles)
         {
-            var t = run();
-            t.Wait();
+            var client = new DicomClient(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
+            client.NegotiateAsyncOps();
+
+
+            int end = dicomFiles.Length;
+            for (int i = 0; i < end; i++)
+            {
+                Log.Info(dicomFiles[i]);
+                var request = new DicomCStoreRequest(dicomFiles[i]);
+
+                request.OnResponseReceived += (req, response) =>
+                    Console.WriteLine("C-Store Response Received, Status: " + response.Status);
+
+                await client.AddRequestAsync(request);
+            }
+
+            await client.SendAsync();
         }
 
-
-        async Task run()
+        public override async Task Start()
         {
-            Log.Info($"Start Process {Opt.DicomSrc}");
-            var ie = System.IO.Directory.GetFiles(Opt.DicomSrc, "*", SearchOption.AllDirectories);
-            var sz = ie.Length;
-            var step = Opt.BatchSize;
-            var left = sz % step == 0 ? 0 : 1;
-            var size = sz / step;
-            ParallelOptions maxp = new ParallelOptions()
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount * 2,
-            };
+            String[] ie = System.IO.Directory.GetFiles(Opt.DicomSrc, "*", SearchOption.AllDirectories);
 
 
-            Parallel.For(0, size, maxp, idx =>
+            int mg = ie.Length / Opt.BatchSize;
+            int lf = ie.Length % Opt.BatchSize;
+
+            if (lf > 0)
             {
-                int sz = idx * step;
-                int end = sz + step;
-                var client = new DicomClient();
-                client.NegotiateAsyncOps();
-                for (int i = sz; i < end; i++)
+                mg += 1;
+            }
+            var   grups = new List<string[]>(mg);
+            for (int i = 0; i < mg; i++)
+            {
+                String[] arr = null;
+                if (lf > 0 && i == mg - 1)
                 {
-                    Log.Info(ie[i]);
-                    client.AddRequest(new DicomCStoreRequest(ie[i]));
+                    arr = new string[lf];
                 }
-
-                client.Send(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
-            });
-
-            //
-            Parallel.For(size * step, sz, maxp, async idx =>
-            {
-                var client = new DicomClient();
-                client.NegotiateAsyncOps();
-                for (int i = sz; i < sz; i++)
+                else
                 {
-                    Log.Info(ie[i]);
-                    client.AddRequest(new DicomCStoreRequest(ie[i]));
+                    arr = new string[Opt.BatchSize];
                 }
-
-                client.Send(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
-            });
+                Array.Copy(ie, i * Opt.BatchSize, arr, 0, arr.Length);
+                grups.Add( arr);
+            }
+            foreach (var grup in grups)
+            {
+                await SendSubSize(grup);
+            }
+            
+ 
         }
     }
 }

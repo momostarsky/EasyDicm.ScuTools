@@ -64,7 +64,7 @@ namespace easyscu
             set;
         }
 
-        [Option("batch", Required = true,  Default = 100  ,HelpText = "How much  DicomFiles Send in one Request !")]
+        [Option("batch", Required = true, Min  = 1, Default = 100  ,HelpText = "How much  DicomFiles Send in one Request !")]
          
         public int  BatchSize
         {

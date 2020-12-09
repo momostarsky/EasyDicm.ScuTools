@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Dicom;
+using Dicom.Imaging;
 using Dicom.Imaging.Codec;
 using Dicom.IO;
 using Dicom.Network;
@@ -36,6 +37,7 @@ namespace easyscu
             XmlConfigurator.Configure(dicomNetworkLoggerRepository, new FileInfo("log4net.config"));
             DicomDictionary.EnsureDefaultDictionariesLoaded();
             Dicom.Log.Log4NetManager.SetImplementation(ScuLogManager.Instance);
+            ImageManager.SetImplementation(new ImageSharpImageManager());
             Dicom.IO.IOManager.SetImplementation(DesktopIOManager.Instance);
             Dicom.Network.NetworkManager.SetImplementation(DesktopNetworkManager .Instance); // if you want to run dicom services
           //  Dicom.Imaging.Codec.TranscoderManager.SetImplementation( Efferent.Native.Codec.NativeTranscoderManager.Instance); // if you want to run dicom services

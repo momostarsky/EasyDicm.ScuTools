@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
+      <PackageReference Include="fo-dicom.ImageSharp" Version="4.0.7" />
       <PackageReference Include="fo-dicom.log4net" Version="4.0.7" />
       <PackageReference Include="fo-dicom.NetCore" Version="4.0.7" />
       <PackageReference Include="log4net" Version="2.0.12" />

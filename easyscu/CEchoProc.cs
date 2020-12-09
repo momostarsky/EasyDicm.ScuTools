@@ -15,24 +15,19 @@ namespace easyscu
         }
  
 
-        public override void Start()
-        {
-            var r = run();
-            r.Wait(3000); 
-        }
-
-        private async Task  run()
+        public override async Task Start()
         {
             var dicomReq = new DicomCEchoRequest
             {
-                 OnResponseReceived = (request, response) => { Log.Info(response.Status); }
+                OnResponseReceived = (request, response) => { Log.Info(response.Status); }
             };
 
             var client = new DicomClient(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
             client.NegotiateAsyncOps(); 
             await client.AddRequestAsync(dicomReq); 
             await client.SendAsync(); 
+
         }
- 
+  
     }
 }

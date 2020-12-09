@@ -12,7 +12,7 @@ namespace easyscu
             Opt = option;
         }
 
-        public abstract void Start();
+        public abstract   Task Start();
         
 
         protected T Opt { get; }
