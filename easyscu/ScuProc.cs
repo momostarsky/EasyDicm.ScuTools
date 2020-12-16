@@ -4,7 +4,7 @@ using log4net;
 
 namespace easyscu
 {
-    public abstract class ScuProc<T> where T : ScuOptions
+    public abstract class ScuProc<T> where T : MyOptions
     {
         protected ScuProc(T option)
         {

@@ -6,12 +6,26 @@ using CommandLine;
 namespace easyscu
 {
 
+    public abstract class MyOptions
+    {
+
+        protected MyOptions()
+        {
+            
+        }
+        public abstract string OptionText();
+    }
+
     /// <summary>
     /// CXXXScu 命令选项
     /// </summary>
-    public abstract class  ScuOptions
+    public abstract class  ScuOptions :MyOptions
     {
-        
+
+        protected ScuOptions() : base()
+        {
+            
+        }
         
         [Option("ae", Required = true, HelpText = "SCP Service Provider  AETitle")]
         public string RemoteAE
@@ -41,7 +55,7 @@ namespace easyscu
             set;
         }
 
-        public virtual string   OptionText()
+        public override string   OptionText()
         {
            var sb=new StringBuilder(1024);
            sb.AppendFormat("{0}={1} ", "MyAE", MyAE);
@@ -56,6 +70,11 @@ namespace easyscu
     [Verb("cstore", false, HelpText = "CStoreScu")]
     public class StoreOptions : ScuOptions
     {
+
+        public StoreOptions() : base()
+        {
+            
+        }
         
         [Option("src", Required = true, HelpText = "Dicom Files Folder To Be Send !")]
         public string DicomSrc
@@ -72,9 +91,10 @@ namespace easyscu
             set;
         }
         
+  
+
         public override string OptionText()
         {
-
             return $"{base.OptionText()} DicomSrc={DicomSrc}";
         }
     }
@@ -82,6 +102,53 @@ namespace easyscu
     [Verb("cecho", false, HelpText = "CEchoScu")]
     public class EchoOptons : ScuOptions
     {
+        public EchoOptons() : base()
+        {
+            
+        }
+    }
+    [Verb("keygen", false, HelpText = "RSAKey Generator")]
+    public class RsaOptions : MyOptions
+    {
+        public RsaOptions() : base()
+        {
+            
+        }
+        [Option("Days", Required = false ,Default = 360, HelpText = "how much days  validated !")]
+        public int Days
+        {
+            get;
+            set;
+        }
         
+        [Option("KeySize", Required = false ,Default = 2048, HelpText = "RSA KeySize :512,1024,2048,4096")]
+        public int KeySize
+        {
+            get;
+            set;
+        }
+        
+        
+        [Option("appid", Required = true, HelpText = "application unique identifier!")]
+        public int  AppId 
+        {
+            get;
+            set;
+        }
+
+        [Option("appname", Required = true, HelpText = "application  unique name")]
+        public string AppName
+        {
+            get;
+            set;
+        }
+        public override string OptionText()
+        {
+            var sb=new StringBuilder(1024);
+            sb.AppendFormat("{0}={1} ", "AppId", AppId);
+            sb.AppendFormat("{0}={1} ", "AppName", AppName);
+            sb.AppendFormat("{0}={1} ", "Days", Days); 
+            return sb.ToString();
+        }
     }
 }
