@@ -26,6 +26,17 @@ namespace easyscu
             t.Wait();
             return 0;
         }
+        
+        static int 
+            CKeyGen(RsaOptions opt)
+        {
+            KeyGen proc = new KeyGen(opt);
+
+            var t=  proc.Start();
+            t.Wait();
+            return 0;
+        }
+
 
         static int  CStoreScu(StoreOptions opt)
         {
@@ -41,10 +52,14 @@ namespace easyscu
         static async Task Main(string[] args)
         {
             Startup.Intance.Start();
-            Parser.Default.ParseArguments<EchoOptons, StoreOptions>(args)
+
+
+           
+            Parser.Default.ParseArguments<EchoOptons, StoreOptions,RsaOptions>(args)
                 .MapResult(
                     (EchoOptons opt) => CEchoScu(opt),
                     (StoreOptions opt) => CStoreScu(opt),
+                    (RsaOptions opt) => CKeyGen(opt),
                      _ => 1 
                 );
             //   

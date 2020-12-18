@@ -107,7 +107,7 @@ namespace easyscu
             
         }
     }
-    [Verb("keygen", false, HelpText = "RSAKey Generator")]
+    [Verb("rsakey", false, HelpText = "RSAKey Generator")]
     public class RsaOptions : MyOptions
     {
         public RsaOptions() : base()
@@ -121,16 +121,11 @@ namespace easyscu
             set;
         }
         
-        [Option("KeySize", Required = false ,Default = 2048, HelpText = "RSA KeySize :512,1024,2048,4096")]
-        public int KeySize
-        {
-            get;
-            set;
-        }
+       
         
         
         [Option("appid", Required = true, HelpText = "application unique identifier!")]
-        public int  AppId 
+        public String  AppId 
         {
             get;
             set;

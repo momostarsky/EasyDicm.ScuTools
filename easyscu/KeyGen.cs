@@ -13,7 +13,7 @@ namespace easyscu
 {
     public class KeyGen : ScuProc<RsaOptions>
     {
-         class JsonContent : StringContent
+        class JsonContent : StringContent
         {
             public JsonContent(object obj) :
                 base(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json")
@@ -40,7 +40,7 @@ namespace easyscu
             if (response.IsSuccessStatusCode)
             {
                 Task<string> t = response.Content.ReadAsStringAsync();
-                t.Wait(); 
+                t.Wait();
                 return t.Result;
             }
             else
@@ -53,9 +53,10 @@ namespace easyscu
         {
             var t = Task.Factory.StartNew(() =>
             {
-               
                 try
                 {
+                   using  var rsa = new RSAHelper();
+
                     var filePath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
                     string json = File.ReadAllText(filePath);
                     dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
@@ -65,7 +66,7 @@ namespace easyscu
                         clientId = Opt.AppId,
                         clientName = Opt.AppName,
                         days = Opt.Days,
-                        // pubkey = km.PublicKey
+                        pubkey = rsa.PublicKey(),
                     };
 
                     var res = HttpClientPost(url, regObj);
@@ -76,14 +77,12 @@ namespace easyscu
                     if (String.IsNullOrEmpty(res))
                         return;
                     dynamic regIfno = Newtonsoft.Json.JsonConvert.DeserializeObject(res);
-                    // jsonObj["RsaKey"]["PublicKey"] = km.PublicKey;
-                    // jsonObj["RsaKey"]["PrivateKey"] = km.PrivateKey;
+                    jsonObj["RsaKey"]["PublicKey"] = rsa.PublicKey();
+                    jsonObj["RsaKey"]["PrivateKey"] = rsa.PrivatecKey();
                     jsonObj["RsaKey"]["ApplicationID"] = regIfno["appId"];
                     jsonObj["RsaKey"]["ApplicationKey"] = regIfno["appSeckey"];
                     jsonObj["RsaKey"]["AppID"] = Opt.AppId;
-                    jsonObj["RsaKey"]["AppName"] = Opt.AppName;
-                    jsonObj["RsaKey"]["KeySize"] = Opt.KeySize;
-
+                    jsonObj["RsaKey"]["AppName"] = Opt.AppName; 
                     string output =
                         Newtonsoft.Json.JsonConvert.SerializeObject(jsonObj, Newtonsoft.Json.Formatting.Indented);
                     File.WriteAllText(filePath, output);

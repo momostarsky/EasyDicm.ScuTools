@@ -2,7 +2,6 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Org.BouncyCastle.Crypto.Tls;
 using RSAExtensions;
 
 namespace easyrsa
@@ -14,26 +13,39 @@ namespace easyrsa
     /// 创建时间：2017年10月30日15:50:14
     /// QQ:501232752
     /// </summary>
-    public class RSAHelper
+    public class RSAHelper : IDisposable
     {
-      
-        private readonly Encoding _encoding;
+        public static readonly Encoding Encoding = Encoding.UTF8;
+        public static readonly int KeySize = 1688;
 
-        private RSA rsa;
+        private readonly RSA rsa;
 
         /// <summary>
         /// 实例化RSAHelper
-        /// </summary>
-        /// <param name="rsaType">加密算法类型 RSA SHA1;RSA2 SHA256 密钥长度至少为2048</param>
-        /// <param name="encoding">编码类型</param>
+        /// </summary> 
         /// <param name="privateKey">私钥</param>
         /// <param name="publicKey">公钥</param>
-        public RSAHelper(string privateKey, string publicKey = null)
+        public RSAHelper(string privateKey )
         {
-            _encoding = Encoding.UTF8;
-            rsa = RSA.Create(2048);
-            rsa.ImportPublicKey(RSAKeyType.Pkcs8, publicKey, false);
-            rsa.ImportPrivateKey(RSAKeyType.Pkcs8, privateKey, false);
+            rsa = RSA.Create( );
+            rsa.ImportPkcs8PrivateKey( Convert.FromBase64String(privateKey), out _);
+           
+        }
+
+        public RSAHelper()
+        {
+            rsa = RSA.Create(KeySize);
+        }
+
+
+        public String PublicKey()
+        {
+            return Convert.ToBase64String(rsa.ExportPkcs8PublicKey());
+        }
+
+        public String PrivatecKey()
+        {
+            return Convert.ToBase64String(rsa.ExportPkcs8PrivateKey());
         }
 
         #region 使用私钥签名
@@ -45,8 +57,7 @@ namespace easyrsa
         /// <returns></returns>
         public byte[] Sign(byte[] data)
         {
-        
-            var signatureBytes =  rsa.SignData(data, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
+            var signatureBytes = rsa.SignData(data, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
 
             return signatureBytes;
         }
@@ -63,8 +74,6 @@ namespace easyrsa
         /// <returns></returns>
         public bool Verify(byte[] data, byte[] sign)
         {
-         
-
             var verify =
                 rsa.VerifyData(data, sign, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
 
@@ -77,9 +86,7 @@ namespace easyrsa
 
         public byte[] Decrypt(byte[] cipherText)
         {
-           
-
-            return   rsa.Decrypt( cipherText, RSAEncryptionPadding.Pkcs1);
+            return rsa.Decrypt(cipherText, RSAEncryptionPadding.Pkcs1);
         }
 
         #endregion
@@ -88,33 +95,14 @@ namespace easyrsa
 
         public byte[] Encrypt(byte[] text)
         {
-
             return rsa.Encrypt(text, RSAEncryptionPadding.Pkcs1);
         }
 
         #endregion
 
-       
- 
-
- 
-    }
-
-
-    /// <summary>
-    /// RSA算法类型
-    /// </summary>
-    public enum RSAType
-    {
-        /// <summary>
-        /// SHA1
-        /// </summary>
-        RSA = 0,
-
-        /// <summary>
-        /// RSA2 密钥长度至少为2048
-        /// SHA256
-        /// </summary>
-        RSA2
+        public void Dispose()
+        {
+            rsa?.Dispose();
+        }
     }
 }
