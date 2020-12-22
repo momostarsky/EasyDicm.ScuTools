@@ -2,6 +2,9 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 using RSAExtensions;
 
 namespace easyrsa
@@ -13,10 +16,10 @@ namespace easyrsa
     /// 创建时间：2017年10月30日15:50:14
     /// QQ:501232752
     /// </summary>
-    public class RSAHelper : IDisposable
+    public class RSAHelper : BaseDispose
     {
         public static readonly Encoding Encoding = Encoding.UTF8;
-        public static readonly int KeySize = 1688;
+        private static readonly int KeySize = 1688;
 
         private readonly RSA rsa;
 
@@ -25,11 +28,10 @@ namespace easyrsa
         /// </summary> 
         /// <param name="privateKey">私钥</param>
         /// <param name="publicKey">公钥</param>
-        public RSAHelper(string privateKey )
+        public RSAHelper(string privateKey)
         {
-            rsa = RSA.Create( );
-            rsa.ImportPkcs8PrivateKey( Convert.FromBase64String(privateKey), out _);
-           
+            rsa = RSA.Create();
+            rsa.ImportPkcs8PrivateKey(Convert.FromBase64String(privateKey), out _);
         }
 
         public RSAHelper()
@@ -100,9 +102,69 @@ namespace easyrsa
 
         #endregion
 
-        public void Dispose()
+
+        public string EncryptBigDataJava(string dataStr)
         {
-            rsa?.Dispose();
+            return rsa.EncryptBigData(dataStr, RSAEncryptionPadding.Pkcs1);
+        }
+
+        public string DecryptBigDataJava(string dataStr)
+        {
+            return rsa.DecryptBigData(dataStr, RSAEncryptionPadding.Pkcs1);
+        }
+
+
+        /// <summary>
+        /// private key ，java->.net
+        /// </summary>
+        /// <param name="privateKey"></param>
+        /// <returns></returns>
+        public static string RsaPrivateKeyJava2DotNet(string privateKey)
+        {
+            if (string.IsNullOrEmpty(privateKey))
+            {
+                return string.Empty;
+            }
+
+            var privateKeyParam =
+                (RsaPrivateCrtKeyParameters) PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey));
+            return
+                $"<RSAKeyValue>" +
+                $"<Modulus>{Convert.ToBase64String(privateKeyParam.Modulus.ToByteArrayUnsigned())}</Modulus>" +
+                $"<Exponent>{Convert.ToBase64String(privateKeyParam.PublicExponent.ToByteArrayUnsigned())}</Exponent>" +
+                $"<P>{Convert.ToBase64String(privateKeyParam.P.ToByteArrayUnsigned())}</P>" +
+                $"<Q>{Convert.ToBase64String(privateKeyParam.Q.ToByteArrayUnsigned())}</Q>" +
+                $"<DP>{Convert.ToBase64String(privateKeyParam.DP.ToByteArrayUnsigned())}</DP>" +
+                $"<DQ>{Convert.ToBase64String(privateKeyParam.DQ.ToByteArrayUnsigned())}</DQ>" +
+                $"<InverseQ>{Convert.ToBase64String(privateKeyParam.QInv.ToByteArrayUnsigned())}</InverseQ>" +
+                $"<D>{Convert.ToBase64String(privateKeyParam.Exponent.ToByteArrayUnsigned())}</D>" +
+                $"</RSAKeyValue>";
+        }
+
+        /// <summary>
+        /// public key ，java->.net
+        /// </summary>
+        /// <param name="publicKey"></param>
+        /// <returns>格式转换结果</returns>
+        public static string RsaPublicKeyJava2DotNet(string publicKey)
+        {
+            if (string.IsNullOrEmpty(publicKey))
+            {
+                return string.Empty;
+            }
+
+            var publicKeyParam = (RsaKeyParameters) PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey));
+            return
+                $"<RSAKeyValue>" +
+                $"<Modulus>{Convert.ToBase64String(publicKeyParam.Modulus.ToByteArrayUnsigned())}</Modulus>" +
+                $"<Exponent>{Convert.ToBase64String(publicKeyParam.Exponent.ToByteArrayUnsigned())}</Exponent>" +
+                $"</RSAKeyValue>";
+        }
+
+        protected override void ClearManagedObjects()
+        {
+            rsa.Dispose();
+            base.ClearManagedObjects();
         }
     }
 }

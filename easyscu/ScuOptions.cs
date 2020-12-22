@@ -70,6 +70,7 @@ namespace easyscu
     [Verb("cstore", false, HelpText = "CStoreScu")]
     public class StoreOptions : ScuOptions
     {
+      
 
         public StoreOptions() : base()
         {
@@ -83,7 +84,7 @@ namespace easyscu
             set;
         }
 
-        [Option("batch", Required = true, Min  = 1, Default = 100  ,HelpText = "How much  DicomFiles Send in one Request !")]
+        [Option("batch", Required = true,   Default = 100  ,HelpText = "How much  DicomFiles Send in one Request !")]
          
         public int  BatchSize
         {
@@ -102,6 +103,7 @@ namespace easyscu
     [Verb("cecho", false, HelpText = "CEchoScu")]
     public class EchoOptons : ScuOptions
     {
+         
         public EchoOptons() : base()
         {
             
@@ -110,6 +112,8 @@ namespace easyscu
     [Verb("rsakey", false, HelpText = "RSAKey Generator")]
     public class RsaOptions : MyOptions
     {
+       
+
         public RsaOptions() : base()
         {
             

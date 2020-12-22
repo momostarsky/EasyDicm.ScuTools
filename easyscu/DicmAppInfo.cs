@@ -57,41 +57,5 @@ namespace easyscu
             return ext4;
         }
  
- 
-
-        // var txt = "CJ10000:123";
-        // var data = Encoding.UTF8.GetBytes(txt);
-        // //---用JAVA的Publick 进行加密
-        // var jPub =
-        //     "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtC0Pt1y/kPOiUVtbJbWwBCfF45iEO9/S9wAu+UO89KHFZqI8dTKpsJaNoXNGFFv4I0eOq7dko/JBseZ13HVHoXoBsKpaisafBW+cuDcExyzeNX6CwTwEWyhr5x3c07xrxxhDBGH/AbFoUR6YpFBiY3eKLzgKVzenAr9auJS39NXupK7hy7zp4OL4RYoIz3Uz1aJa0QScq8ntGl7TzFs73s3csJJ6IBsPn2QUe+2IM3AbQLXVB/ng7n3AYzrMx16r/WayFx2MESFbwBeZbwyiDSpk2XOeXo1Rx0uZPgZgXcPfpnGzXiFoHOWcMzEpVPxh9/YRgluToRHORWjeMZu1jQIDAQAB";
-        //
-        // var jPubKey =  RSA.Create(2048);
-        // jPubKey.ImportPublicKey(RSAKeyType.Pkcs8, jPub,false); 
-        // var dataEnc = jPubKey.Encrypt( data, RSAEncryptionPadding.Pkcs1);
-        // var bEnc = Convert.ToBase64String(dataEnc);
-        // Console.WriteLine($"{ bEnc.Length}={ bEnc }");
-        //     
-        // //----用DOTNET 的进行签名数据
-        // var filePath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
-        // string json = File.ReadAllText(filePath);
-        // dynamic jsonObj = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
-        // var scuPrikey = $"{jsonObj["RsaKey"]["PrivateKey"]}";
-        // var scuPubkey = $"{jsonObj["RsaKey"]["PublicKey"]}";
-        //  
-        // Console.WriteLine(scuPubkey);
-        //     
-        //
-        // var rsa = new RSAHelper(scuPrikey, scuPubkey); 
-        // //私钥签名
-        // byte[] signStrData = rsa.Sign(dataEnc); 
-        // var signB64Enc = Convert.ToBase64String(signStrData);
-        //     
-        // Console.WriteLine($"signData:{ signB64Enc.Length}={ signB64Enc }");
-        //
-        //     
-        // //公钥验证签名
-        // bool signVerify = rsa.Verify(dataEnc, signStrData);
-        //
-        // Console.WriteLine("验证签名：" + signVerify);
     }
 }

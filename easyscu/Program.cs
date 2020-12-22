@@ -10,11 +10,16 @@ using Dicom.Log;
 using Dicom.Network;
 using log4net;
 using log4net.Config;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using SixLabors.Shapes;
 using DicomClient = Dicom.Network.Client.DicomClient;
 using LogManager = log4net.LogManager;
 
 namespace easyscu
 {
+  
+    
    internal static class Program
     {
         static int 
@@ -51,9 +56,14 @@ namespace easyscu
 
         static async Task Main(string[] args)
         {
-            Startup.Intance.Start();
+            
+  
+          
 
-
+           Startup.Intance.Start();
+           var  cis =  Startup.Intance.Get<ICustomService>();
+           
+         
            
             Parser.Default.ParseArguments<EchoOptons, StoreOptions,RsaOptions>(args)
                 .MapResult(
