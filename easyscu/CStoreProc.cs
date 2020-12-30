@@ -21,12 +21,14 @@ namespace easyscu
     public class CStoreProc : ScuProc<StoreOptions>
     {
         protected ConcurrentBag<KeyValuePair<string, string>> SopItems;
-        protected ConcurrentBag<KeyValuePair<string, string>> SendFailed;
+        protected ConcurrentBag<string> UIFormatFailed;
+        protected ConcurrentBag<string> DicomValFailed;
 
         public CStoreProc(StoreOptions opt) : base(opt)
         {
             SopItems = new ConcurrentBag<KeyValuePair<string, string>>();
-            SendFailed = new ConcurrentBag<KeyValuePair<string, string>>();
+            UIFormatFailed = new ConcurrentBag<String>();
+            DicomValFailed = new ConcurrentBag<string>();
         }
 
 
@@ -39,7 +41,7 @@ namespace easyscu
 
 
             int end = dicomFiles.Length;
-          
+
             for (int i = 0; i < end; i++)
             {
                 Log.Info(dicomFiles[i]);
@@ -64,9 +66,32 @@ namespace easyscu
                     continue;
                 }
 
-                var request = new DicomCStoreRequest(df);
-                request.OnResponseReceived += (req, response) =>
-                    Console.WriteLine("C-Store Response Received, Status: " + response.Status);
+                if (!df.Dataset.Contains(DicomTag.SOPInstanceUID))
+                {
+                    Log.Error(":不是合法的DICOM文件  Tag.SOPInstanceUID 不存在  ");
+                    continue;
+                }
+
+                DicomCStoreRequest request = null;
+                Exception error = null;
+
+                try
+                {
+                    request = new DicomCStoreRequest(df);
+                    request.OnResponseReceived += (req, response) =>
+                        Console.WriteLine("C-Store Response Received, Status: " + response.Status);
+                }
+                catch (Exception ex)
+                {
+                    error = ex;
+                }
+
+                if (request == null)
+                {
+                    DicomValFailed.Add(dicomFiles[i]);
+                    continue;
+                }
+
                 var sopclsuid = df.Dataset.GetString(DicomTag.SOPClassUID);
                 var sopuid = df.Dataset.GetString(DicomTag.SOPInstanceUID);
                 var ok = false;
@@ -77,33 +102,29 @@ namespace easyscu
                 }
                 catch (DicomValidationException e)
                 {
-                    SendFailed.Add(new KeyValuePair<string, string>(sopuid, dicomFiles[i]));
-                     Console.WriteLine( "SOPInstanceUID-ErrorFormat!"+dicomFiles[i] );
+                    UIFormatFailed.Add(dicomFiles[i]);
                 }
 
                 if (ok)
                 {
                     SopItems.Add(new KeyValuePair<string, string>(sopuid, sopclsuid));
-                    await client.AddRequestAsync(request);    
+                    await client.AddRequestAsync(request);
                 }
                 else
-                {  
-                    Console.WriteLine(  "SOPInstanceUID-ErrorFormat!" + dicomFiles[i]);
+                {
                     request = null;
                 }
-                
             }
 
             if (SopItems.Count > 0)
             {
-                await client.SendAsync();    
+                await client.SendAsync();
             }
             else
             {
-                Console.WriteLine("No Dicom Files To Send!"); 
-                 
+                client = null;
+                Console.WriteLine("No Dicom Files To Send!");
             }
-            
         }
 
         static Task<DicomNEventReportResponse> OnNEventReportRequest(DicomNEventReportRequest request)
@@ -118,7 +139,7 @@ namespace easyscu
             return Task.FromResult(new DicomNEventReportResponse(request, DicomStatus.Success));
         }
 
-        private async Task SendStorageCommit(string[] dicomFiles)
+        private async Task SendStorageCommit()
         {
             var client = new DicomClient(Opt.Host, Opt.Port, false, Opt.MyAE, Opt.RemoteAE);
             client.NegotiateAsyncOps();
@@ -139,9 +160,6 @@ namespace easyscu
             // }; 
             foreach (var sopInfo in SopItems)
             {
-                
-                 
-
                 DicomDataset ds = new DicomDataset()
                 {
                     {DicomTag.ReferencedSOPClassUID, sopInfo.Value},
@@ -205,12 +223,25 @@ namespace easyscu
                 await SendSubSize(grup);
             }
 
-            await SendStorageCommit(ie);
-
-
-            foreach (var kv in SendFailed)
+            if (SopItems.Count > 0)
             {
-                Console.WriteLine("SopInstanceUID FormatError :{0}-{1}", kv.Key,kv.Value);
+                await SendStorageCommit( );
+            }
+
+
+            Random rd = new Random(DateTime.Now.Millisecond);
+            foreach (var kv in UIFormatFailed)
+            {
+                FileInfo f = new FileInfo(kv);
+
+                File.Move(kv, $"./uidfmt-{f.Name}{rd.Next()}.dcm");
+            }
+
+            foreach (var kv in DicomValFailed)
+            {
+                FileInfo f = new FileInfo(kv);
+
+                File.Move(kv, $"./uidmis-{f.Name}{rd.Next()}.dcm");
             }
         }
     }
