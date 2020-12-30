@@ -22,7 +22,6 @@
         <PackageReference Include="CommandLineParser" Version="2.8.0" />
         <PackageReference Include="fo-dicom.ImageSharp" Version="4.0.7" />
         <PackageReference Include="fo-dicom.log4net" Version="4.0.7" />
-        <PackageReference Include="fo-dicom.NetCore" Version="4.0.7" />
         <PackageReference Include="log4net" Version="2.0.12" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
@@ -49,6 +48,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\easyrsa\easyrsa.csproj" />
+        <ProjectReference Include="..\fo-dicom\FO-DICOM.Core\FO-DICOM.Core.csproj" />
     </ItemGroup>
 
 </Project>

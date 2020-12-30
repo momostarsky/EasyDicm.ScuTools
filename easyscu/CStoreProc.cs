@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dicom;
+using Dicom.IO.Reader;
 using Dicom.Network;
 using DicomClient = Dicom.Network.Client.DicomClient;
 
@@ -19,10 +21,12 @@ namespace easyscu
     public class CStoreProc : ScuProc<StoreOptions>
     {
         protected ConcurrentBag<KeyValuePair<string, string>> SopItems;
+        protected ConcurrentBag<KeyValuePair<string, string>> SendFailed;
 
         public CStoreProc(StoreOptions opt) : base(opt)
         {
             SopItems = new ConcurrentBag<KeyValuePair<string, string>>();
+            SendFailed = new ConcurrentBag<KeyValuePair<string, string>>();
         }
 
 
@@ -35,23 +39,74 @@ namespace easyscu
 
 
             int end = dicomFiles.Length;
+          
             for (int i = 0; i < end; i++)
             {
                 Log.Info(dicomFiles[i]);
-                var df = await DicomFile.OpenAsync(dicomFiles[i]);
+                DicomFile df = null;
+                try
+                {
+                    df = await DicomFile.OpenAsync(dicomFiles[i]);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(dicomFiles[i] + ":不是合法的DICOM文件");
+                }
+
+                if (df == null)
+                {
+                    continue;
+                }
+
+                if (!df.Dataset.Contains(DicomTag.SOPClassUID))
+                {
+                    Log.Error(dicomFiles[i] + ":不是合法的DICOM文件  Tag.SOPClassUID 不存在  ");
+                    continue;
+                }
+
                 var request = new DicomCStoreRequest(df);
                 request.OnResponseReceived += (req, response) =>
                     Console.WriteLine("C-Store Response Received, Status: " + response.Status);
                 var sopclsuid = df.Dataset.GetString(DicomTag.SOPClassUID);
                 var sopuid = df.Dataset.GetString(DicomTag.SOPInstanceUID);
-                SopItems.Add(new KeyValuePair<string, string>(sopuid, sopclsuid));
-                await client.AddRequestAsync(request);
+                var ok = false;
+                try
+                {
+                    DicomValidation.ValidateUI(sopuid);
+                    ok = true;
+                }
+                catch (DicomValidationException e)
+                {
+                    SendFailed.Add(new KeyValuePair<string, string>(sopuid, dicomFiles[i]));
+                     Console.WriteLine( "SOPInstanceUID-ErrorFormat!"+dicomFiles[i] );
+                }
+
+                if (ok)
+                {
+                    SopItems.Add(new KeyValuePair<string, string>(sopuid, sopclsuid));
+                    await client.AddRequestAsync(request);    
+                }
+                else
+                {  
+                    Console.WriteLine(  "SOPInstanceUID-ErrorFormat!" + dicomFiles[i]);
+                    request = null;
+                }
+                
             }
 
-            await client.SendAsync();
+            if (SopItems.Count > 0)
+            {
+                await client.SendAsync();    
+            }
+            else
+            {
+                Console.WriteLine("No Dicom Files To Send!"); 
+                 
+            }
+            
         }
 
-       static Task<DicomNEventReportResponse> OnNEventReportRequest(DicomNEventReportRequest request)
+        static Task<DicomNEventReportResponse> OnNEventReportRequest(DicomNEventReportRequest request)
         {
             var refSopSequence = request.Dataset.GetSequence(DicomTag.ReferencedSOPSequence);
             foreach (var item in refSopSequence.Items)
@@ -84,11 +139,17 @@ namespace easyscu
             // }; 
             foreach (var sopInfo in SopItems)
             {
-                dicomRefSopSequence.Items.Add(new DicomDataset()
+                
+                 
+
+                DicomDataset ds = new DicomDataset()
                 {
                     {DicomTag.ReferencedSOPClassUID, sopInfo.Value},
                     {DicomTag.ReferencedSOPInstanceUID, sopInfo.Key}
-                });
+                };
+
+
+                dicomRefSopSequence.Items.Add(ds);
             }
 
             // dicomRefSopSequence.Items.Add(seqItem);
@@ -145,6 +206,12 @@ namespace easyscu
             }
 
             await SendStorageCommit(ie);
+
+
+            foreach (var kv in SendFailed)
+            {
+                Console.WriteLine("SopInstanceUID FormatError :{0}-{1}", kv.Key,kv.Value);
+            }
         }
     }
 }
